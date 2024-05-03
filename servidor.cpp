@@ -39,14 +39,19 @@ int main(){
     //3. Binding the Server Socket
     bind(server_socket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
     listen(server_socket, 1);
-    int clientSocket = accept(server_socket, nullptr, nullptr);
     
-  
-    // recieving data 
-    char buffer[1024] = { 0 }; 
-    recv(clientSocket, buffer, sizeof(buffer), 0); 
-    cout << "Message from client: " << buffer << endl; 
-  
+    
+    int clientSocket = accept(server_socket, nullptr, nullptr);
+    while(true){
+
+        // receving data 
+        char buffer[1024] = { 0 }; 
+        recv(clientSocket, buffer, sizeof(buffer), 0); 
+        cout << "Message from client: " << buffer << endl;
+        if(buffer=="Bye"){
+            break;
+        } 
+  }
     // closing the socket. 
     close(server_socket); 
 }

@@ -8,6 +8,7 @@
 #include <sys/socket.h> 
 #include <unistd.h> 
 #include <arpa/inet.h> // Para a função inet_addr
+#include <string>
 int main() 
 { 
     // creating socket 
@@ -23,10 +24,19 @@ int main()
 
     // sending connection request 
     connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)); 
+    std::cout<<"Digite a mensagem ao servidor \n";
+    while(true){
+        const char* message; 
+        std::string msg;
+
+        std::cin>>msg;
+        message=msg.c_str();
+        send(clientSocket, message, strlen(message), 0); 
   
+    }
     // sending data 
-    const char* message = "Hello, server!"; 
-    send(clientSocket, message, strlen(message), 0); 
+    
+    
   
     // closing socket 
     close(clientSocket); 
