@@ -23,7 +23,12 @@ int main()
 
 
     // sending connection request 
-    connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)); 
+   
+    if(connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress))){
+        std::cout<<"Conexao falhou\n";
+        return -1;
+    }
+
     std::cout<<"Digite a mensagem ao servidor \n";
     while(true){
         const char* message; 
