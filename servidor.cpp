@@ -4,6 +4,7 @@
 #include <netinet/in.h> //https://pubs.opengroup.org/onlinepubs/009695399/basedefs/netinet/in.h.html
 #include <arpa/inet.h>
 #include <unistd.h> // https://pubs.opengroup.org/onlinepubs/7908799/xsh/unistd.h.html
+#include <cstring>
 using namespace std;
 
 
@@ -39,7 +40,7 @@ int main(){
     //3. Binding the Server Socket
     bind(server_socket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
     listen(server_socket, 1);
-    
+    const char* bye = "Bye";
     
     int clientSocket = accept(server_socket, nullptr, nullptr);
     while(true){
@@ -48,7 +49,7 @@ int main(){
         char buffer[1024] = { 0 }; 
         recv(clientSocket, buffer, sizeof(buffer), 0); 
         cout << "Message from client: " << buffer << endl;
-        if(buffer=="Bye"){
+        if(strcmp(bye,buffer)==0){
             break;
         } 
   }
