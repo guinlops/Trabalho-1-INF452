@@ -17,10 +17,10 @@ int main()
     // specifying address 
     sockaddr_in serverAddress; 
     serverAddress.sin_family = AF_INET; 
-    serverAddress.sin_port = htons(10001); 
+    serverAddress.sin_port = htons(20000); 
     //serverAddress.sin_addr.s_addr = INADDR_ANY; 
-    serverAddress.sin_addr.s_addr = inet_addr("200.235.131.66"); //
-    //serverAddress.sin_addr.s_addr=inet_addr("127.0.0.1");
+    //serverAddress.sin_addr.s_addr = inet_addr("200.235.131.66"); //
+    serverAddress.sin_addr.s_addr=inet_addr("127.0.0.1");
 
     // sending connection request 
    
@@ -30,9 +30,10 @@ int main()
     }
     std::cout<<"Conexao feita\n";
     
-    std::cout<<"Digite a mensagem ao servidor \n";
+   
     while(true){
-         std::string msg;
+         /*std::string msg;
+        std::cout<<"Digite a mensagem ao peer \n";
         std::getline(std::cin, msg);
         if (msg == "sair")
             break;
@@ -54,8 +55,9 @@ int main()
             break;
         }
 
-        std::cout << "Mensagem do servidor: " << buffer << std::endl;
+        std::cout << "Mensagem do servidor: " << buffer << std::endl;*/
     }
+
     // sending data 
     
     
