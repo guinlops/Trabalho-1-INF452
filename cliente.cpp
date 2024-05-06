@@ -17,27 +17,44 @@ int main()
     // specifying address 
     sockaddr_in serverAddress; 
     serverAddress.sin_family = AF_INET; 
-    serverAddress.sin_port = htons(10000); 
+    serverAddress.sin_port = htons(10001); 
     //serverAddress.sin_addr.s_addr = INADDR_ANY; 
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // mMEU PRÓPRIO IP
-
+    serverAddress.sin_addr.s_addr = inet_addr("200.235.131.66"); //
+    //serverAddress.sin_addr.s_addr=inet_addr("127.0.0.1");
 
     // sending connection request 
    
-    if(connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress))){
+    if( connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
         std::cout<<"Conexao falhou\n";
         return -1;
     }
-
+    std::cout<<"Conexao feita\n";
+    
     std::cout<<"Digite a mensagem ao servidor \n";
     while(true){
-        const char* message; 
-        std::string msg;
+         std::string msg;
+        std::getline(std::cin, msg);
+        if (msg == "sair")
+            break;
 
-        std::cin>>msg;
-        message=msg.c_str();
-        send(clientSocket, message, strlen(message), 0); 
-  
+        ssize_t bytesSent = send(clientSocket, msg.data(), msg.size(), 0);
+        if (bytesSent == -1) {
+            std::cerr << "Erro ao enviar mensagem\n";
+            break;
+        }
+
+        // Receiving data from server
+        char buffer[1024] = {0};
+        ssize_t bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (bytesReceived == -1) {
+            std::cerr << "Erro ao receber mensagem do servidor\n";
+            break;
+        } else if (bytesReceived == 0) {
+            std::cout << "Conexão encerrada pelo servidor\n";
+            break;
+        }
+
+        std::cout << "Mensagem do servidor: " << buffer << std::endl;
     }
     // sending data 
     
