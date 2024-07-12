@@ -24,8 +24,8 @@ finally:
     msg=input("Digite a mensagem inicial\n")
     msg=msg+"\r\n"
     
-    bytesEnviados=serverSocket.send(msg.encode())
-    if(bytesEnviados==-1):
+    sentBytes=serverSocket.send(msg.encode())
+    if(sentBytes==-1):
         print("Erro ao enviar mensagem")
 
     serverSocket.send(str.encode("LIST\r\n"))
@@ -42,7 +42,7 @@ try:
 
     # Especifica o endereço e a porta desejados
     endereco = 'localhost'
-    porta = 30000
+    porta = 20000
 
     # Verifica se a porta está dentro do intervalo permitido
     if porta < 0 or porta > 65535:
@@ -61,3 +61,98 @@ except ValueError as ve:
 
 finally:
    clientSocket.listen(1)
+
+
+
+
+
+
+
+
+
+def handlePeerConnection(peerSocket):
+    try:
+            conn, addr = peerSocket.accept()
+            peerName = conn.recv(1024) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
+            print("\nConexão estabelecida com <{}>\n".format(peerName.decode()))
+            while True:
+                try:
+                    responseMsg = conn.recv(1024) #As próximas mensagens chegarão aqui
+                    if responseMsg.decode() == "/bye":
+                        print("\n<{}> encerrou a conexão".format(peerName.decode()))
+                        break
+                    elif responseMsg.decode() == "":
+                        print("\n<{}> encerrou a conexão".format(peerName.decode()))
+                        break
+                    print("<{}>:".format(nome_recebido.decode()), responseMsg.decode())
+                except:
+                    break
+    except socket.error as e:
+        print(f"Erro de conexao com peer {e}")
+
+            
+
+
+thread_receber = threading.Thread(target=handlePeerConnection, args=(clientSocket,)) 
+thread_receber.start() #Start do recebimento 
+
+while True:
+    
+   
+    
+    inputMsg=input("Digite o comando\n")
+
+
+    
+
+
+    if(inputMsg=="/list"):
+        sentBytes=serverSocket.send(("LIST"+"\r\n").encode())
+        if(sentBytes==-1):
+            print("Erro ao enviar mensagem")
+        responseMsg = serverSocket.recv(1024)
+        print(responseMsg.decode())
+
+    if(inputMsg=="/chat"):
+        inputMsg=input("Com quem você quer se conectar?")
+        sentBytes=serverSocket.send(("ADDR " +inputMsg+"\r\n").encode())
+        if(sentBytes==-1):
+            print("Erro ao enviar mensagem")
+        responseMsg = serverSocket.recv(1024)
+        ipv4string=responseMsg.decode().replace("ADDR","").replace(" ","")
+        #print(ipv4string)
+        ip, port = ipv4string.split(':')
+        #print(ip)
+        #print(porta)
+        try:
+                peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+                peerSocket.connect((ip, port))
+                peerResponseThread = threading.Thread(target=handlePeerConnection, args=(peerSocket,)) 
+                peerResponseThread.start() #detach da thread
+        except socket.error as err:
+            print(f"Erro ao conectar ao servidor: {err}")
+        finally:
+
+                while True:
+                    inputMsg=input("Escreva sua mensagem ao peer")
+                    if(inputMsg=="/bye"):
+                        break
+                    
+                    try:
+                        sentBytes=peerSocket.send(inputMsg.encode())
+                        if(sentBytes==-1):
+                            print("Erro ao enviar mensagem")
+
+                    except socket.error as e:
+                         print(f"Erro de conexao com peer {e}")
+                         peerSocket.close()
+                         break
+                    
+                    finally:
+                        continue
+       
+
+    
+
+
+
