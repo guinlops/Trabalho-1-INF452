@@ -10,7 +10,7 @@ try:
     # Cria o socket TCP/IP
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
-    # Conecta ao servidor
+    # Conecta ao servidor   
     serverSocket.connect((host, porta))
     
     print("Conectado ao servidor com sucesso")
@@ -70,9 +70,9 @@ finally:
 
 
 
-def handlePeerConnection(peerSocket):
+def handlePeerConnection(clientSocket):
     try:
-            conn, addr = peerSocket.accept()
+            conn, addr = clientSocket.accept()
             peerName = conn.recv(1024) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
             print("\nConexão estabelecida com <{}>\n".format(peerName.decode()))
             while True:
@@ -93,13 +93,13 @@ def handlePeerConnection(peerSocket):
             
 
 
-thread_receber = threading.Thread(target=handlePeerConnection, args=(clientSocket,)) 
-thread_receber.start() #Start do recebimento 
 
 while True:
     
    
-    
+    thread_receber = threading.Thread(target=handlePeerConnection, args=(clientSocket,)) 
+    thread_receber.start() #Start do recebimento 
+        
     inputMsg=input("Digite o comando\n")
 
 
@@ -127,8 +127,8 @@ while True:
         try:
                 peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
                 peerSocket.connect((ip, port))
-                peerResponseThread = threading.Thread(target=handlePeerConnection, args=(peerSocket,)) 
-                peerResponseThread.start() #detach da thread
+                
+                
         except socket.error as err:
             print(f"Erro ao conectar ao servidor: {err}")
         finally:
