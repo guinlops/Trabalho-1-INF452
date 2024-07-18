@@ -7,14 +7,23 @@ import time
 host = '200.235.131.66' #ip Servidor
 porta = 10001
 
-           
 
+expectedPeerName=""
 
+def print_help():
+    print("/list para listar peers online")
+    print("/chat para comunicar com outro peer")
+    print("/help para lista de comandos")
+    print("/exit para sair")
 
 def handlePeerConnection(myServerSocket):
     try:
             conn, addr = myServerSocket.accept()
+            #print(addr.decode())
+            
+            print(f"Conexão estabelecida com peer de porta {addr[1]}")
             peerName = conn.recv(1024) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
+           
             print("\nConexão estabelecida com <{}>\n".format(peerName.decode()))
             while True:
                 try:
@@ -25,7 +34,12 @@ def handlePeerConnection(myServerSocket):
                     elif responseMsg.decode() == "":
                         print("\n<{}> encerrou a conexão".format(peerName.decode()))
                         break
-                    print("<{}>:".format(peerName.decode()), responseMsg.decode())
+                    print(f"ExpectedPeerName: {expectedPeerName} e ReceivedPeerName:{peerName.decode()}")
+                    if(expectedPeerName==""):
+                        print("<{}>:".format(peerName.decode()), responseMsg.decode())
+                    elif(expectedPeerName==peerName.decode()):
+                        print("<{}>:".format(peerName.decode()), responseMsg.decode())
+                    #else nao printa, mas recebe.
                 except:
                     break
     except socket.error as e:
@@ -35,39 +49,7 @@ def handlePeerConnection(myServerSocket):
 
             
 def main():
-    try:
-    # Cria o socket TCP/IP
-        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
-    # Conecta ao servidor/ conecta ao socket do Servidor  
-        global host
-        global porta
-        serverSocket.connect((host, porta))
-    
-        print("Conectado ao servidor com sucesso")
-
-    # Aqui você pode continuar com o restante do seu código para enviar/receber mensagens, etc.
-
-    except socket.error as err:
-        print(f"Erro ao conectar ao servidor: {err}")
-        # Trate o erro aqui, como fechar o socket se necessário
-    finally:
-        ##msg=input("Digite a mensagem inicial\n")
-        msg="USER grilo:20002"
-        msg=msg+"\r\n"
-        myName="grilo"
-        
-    sentBytes=serverSocket.send(msg.encode())
-    if(sentBytes==-1):
-        print("Erro ao enviar mensagem")
-
-    serverSocket.send(str.encode("LIST\r\n"))
-    responseMsg = serverSocket.recv(1024)
-
-    if responseMsg:
-        print("Mensagem Recebida com sucesso")
-        #print(responseMsg.decode())
-
+    print_help()
 
     try:
         # Cria o socket que funciona como servidor próprio, serve para conexao com peer
@@ -75,14 +57,15 @@ def main():
 
         # Especifica o endereço e a porta desejados
         endereco = 'localhost'
-        porta = 20002
-
-        # Verifica se a porta está dentro do intervalo permitido
-        if porta < 0 or porta > 65535:
-            raise ValueError("Porta fora do intervalo válido (0-65535)")
-
+        #porta = 20000
         # Tenta vincular o socket ao endereço e porta especificados
-        myServerSocket.bind((endereco, porta))
+        
+        myServerSocket.bind((endereco, 0)) #teste ip e porta atribuido automaticamente
+        
+        tendereco, tporta = myServerSocket.getsockname()
+        
+        print(f"Minha porta:{tporta}")
+
 
     except OSError as err:
         print(f"Erro ao vincular o socket: {err}")
@@ -96,16 +79,52 @@ def main():
         print("myServerSocket is listening")
         myServerSocket.listen(2)
 
+    try:
+    # Cria o socket TCP/IP
+        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    # Conecta ao servidor/ conecta ao socket do Servidor  
+        global host
+        global porta
+        serverSocket.connect((host, porta))
+    
+        print("Conectado ao servidor com sucesso")
+
+  
+
+    except socket.error as err:
+        print(f"Erro ao conectar ao servidor: {err}")
+        # Trate o erro aqui, como fechar o socket se necessário
+    finally:
+        ##msg=input("Digite a mensagem inicial\n")
+        msg="USER grilo:"+str(tporta)
+        myname="grilo"
+        msg=msg+"\r\n"
+        
+        
+        
+    sentBytes=serverSocket.send(msg.encode())
+    if(sentBytes==-1):
+        print("Erro ao enviar mensagem")
+
+    #serverSocket.send(str.encode("LIST\r\n"))
+    #responseMsg = serverSocket.recv(1024)
+
+    #if responseMsg:
+     #   print("Mensagem Recebida com sucesso")
+        #print(responseMsg.decode())
 
     while True:
-        
-    
-    
         thread_receber = threading.Thread(target=handlePeerConnection, args=(myServerSocket,)) 
         thread_receber.daemon = True  # Torna o thread daemon para que ele termine quando o programa principal terminar   
         thread_receber.start() #Start do recebimento 
         
-        inputMsg=input("(grilo)Digite o comando\n")
+       
+        inputMsg=input("(main)Digite o comando \n")
+        if(inputMsg=="/help"):
+            print_help()
+
+
 
         if(inputMsg=="/list"):
             sentBytes=serverSocket.send(("LIST"+"\r\n").encode())
@@ -119,34 +138,48 @@ def main():
         
         if(inputMsg=="/chat"):
             inputMsg=input("Com quem você quer se conectar?")
+            if(inputMsg==""):
+                continue
+            global expectedPeerName
+            expectedPeerName=inputMsg
+            print(f"Voce deseja-se comunicar com {expectedPeerName}")   
+
             sentBytes=serverSocket.send(("ADDR " +inputMsg+"\r\n").encode())
-            
+          
             if(sentBytes==-1):
                 print("Erro ao enviar mensagem")
             responseMsg = serverSocket.recv(1024)
             ipv4string=responseMsg.decode().replace("ADDR","").replace(" ","")
             #print(ipv4string)
             ip, port = ipv4string.split(':')
+           #expectedPeerPort=port            
             port=int(port)
             print(ip)
             print(port)
+            
             try:
                     peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
                     #peerSocket.connect((ip, port))
                     peerSocket.connect(('localhost',port))
-                    peerSocket.send((myName).encode())
-                    
+                    peerSocket.send((myname).encode())
+                
             except socket.error as err:
                 print(f"Erro ao conectar ao peer: {err}")
                 continue
             finally:
                     while True:
-                        inputMsg=input("Escreva sua mensagem ao peer\n")
+                        inputMsg=input(f"Escreva sua mensagem a(o) {expectedPeerName} ou digite /return para voltar ao menu\n")
                         if(inputMsg=="/bye"):
-                            #sentBytes=serverSocket.send(("DISC"+"\r\n").encode())
+                            #sentBytes=peerSocket.send(("DISC"+"\r\n").encode())
+                            expectedPeerName=""
                             peerSocket.close()
                             break
                         
+
+                        if(inputMsg=="/return"):
+                            break
+
+                       
                         try:
                             sentBytes=peerSocket.send(inputMsg.encode())
                             if(sentBytes==-1):
