@@ -53,9 +53,9 @@ def main():
         # Trate o erro aqui, como fechar o socket se necessário
     finally:
         ##msg=input("Digite a mensagem inicial\n")
-        msg="USER coruja:20001"
+        msg="USER grilo:20002"
         msg=msg+"\r\n"
-        myName="coruja"
+        myName="grilo"
         
     sentBytes=serverSocket.send(msg.encode())
     if(sentBytes==-1):
@@ -75,7 +75,7 @@ def main():
 
         # Especifica o endereço e a porta desejados
         endereco = 'localhost'
-        porta = 20001
+        porta = 20002
 
         # Verifica se a porta está dentro do intervalo permitido
         if porta < 0 or porta > 65535:
@@ -105,7 +105,7 @@ def main():
         thread_receber.daemon = True  # Torna o thread daemon para que ele termine quando o programa principal terminar   
         thread_receber.start() #Start do recebimento 
         
-        inputMsg=input("(coruja)Digite o comando\n")
+        inputMsg=input("(grilo)Digite o comando\n")
 
         if(inputMsg=="/list"):
             sentBytes=serverSocket.send(("LIST"+"\r\n").encode())
@@ -141,10 +141,9 @@ def main():
                 continue
             finally:
                     while True:
-                        inputMsg=input("(coruja)Escreva sua mensagem ao peer\n")
+                        inputMsg=input("Escreva sua mensagem ao peer\n")
                         if(inputMsg=="/bye"):
                             #sentBytes=serverSocket.send(("DISC"+"\r\n").encode())
-                            sentBytes=peerSocket.send(("DISC").encode())
                             peerSocket.close()
                             break
                         

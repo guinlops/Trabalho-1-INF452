@@ -29,7 +29,7 @@ def handlePeerConnection(myServerSocket):
                 except:
                     break
     except socket.error as e:
-        print(f"Erro de conexao com peer {e}")
+        print(f"(handlePeerConnection)Erro de conexao com peer {e}")
     except:
         print("Conexão encerrada")
 
@@ -98,14 +98,11 @@ def main():
 
 
     while True:
-        
-    
-    
         thread_receber = threading.Thread(target=handlePeerConnection, args=(myServerSocket,)) 
         thread_receber.daemon = True  # Torna o thread daemon para que ele termine quando o programa principal terminar   
         thread_receber.start() #Start do recebimento 
         
-        inputMsg=input("Digite o comando\n")
+        inputMsg=input("(main)Digite o comando \n")
 
         if(inputMsg=="/list"):
             sentBytes=serverSocket.send(("LIST"+"\r\n").encode())
@@ -143,7 +140,7 @@ def main():
                     while True:
                         inputMsg=input("Escreva sua mensagem ao peer\n")
                         if(inputMsg=="/bye"):
-                            sentBytes=serverSocket.send(("DISC"+"\r\n").encode())
+                            #sentBytes=peerSocket.send(("DISC"+"\r\n").encode())
                             peerSocket.close()
                             break
                         
@@ -153,12 +150,12 @@ def main():
                                 print("Erro ao enviar mensagem")
 
                         except socket.error as e:
-                            print(f"Erro de conexao com peer {e}")
+                            print(f"Erro de conexao com peer\n{e}")
                             peerSocket.close()
                             break
                         
-                        finally:
-                            continue
+                        #finally:
+                         #   continue
        
 
 if __name__ == "__main__":
