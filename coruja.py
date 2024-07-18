@@ -22,7 +22,7 @@ except socket.error as err:
     # Trate o erro aqui, como fechar o socket se necessário
 finally:
     ##msg=input("Digite a mensagem inicial\n")
-    msg="USER main:20000"
+    msg="USER coruja:20001"
     msg=msg+"\r\n"
     
     sentBytes=serverSocket.send(msg.encode())
@@ -43,7 +43,7 @@ try:
 
     # Especifica o endereço e a porta desejados
     endereco = 'localhost'
-    porta = 20000
+    porta = 20001
 
     # Verifica se a porta está dentro do intervalo permitido
     if porta < 0 or porta > 65535:
