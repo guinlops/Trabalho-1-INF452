@@ -52,15 +52,14 @@ def handlePeerConnection(myServerSocket):
         print("Conexão encerrada")
 
 def keep(serverSocket):
-    # while True:
-    #     try:
-    #         sentBytes=serverSocket.send(str.encode("KEEP\r\n"))
+    while True:
+        try:
+            sentBytes=serverSocket.send(str.encode("KEEP\r\n"))
         
-    #     except:
-    #         print("Falha ao mandar Keep para o servidor")
+        except:
+            print("Falha ao mandar Keep para o servidor")
         
-    #     time.sleep(10)
-    print()
+        time.sleep(10)
 
 def main():
     #print_help()
