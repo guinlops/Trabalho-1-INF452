@@ -14,6 +14,9 @@ def print_help():
     print("/list para listar peers online")
     print("/chat para comunicar com outro peer")
     print("/help para lista de comandos")
+    print("/info para informacoes de conexão")
+    print("\n")
+
 
 def handlePeerConnection(myServerSocket):
     try:
@@ -26,13 +29,9 @@ def handlePeerConnection(myServerSocket):
             while True:
                 try:
                     responseMsg = conn.recv(1024) #As próximas mensagens chegarão aqui
-                    if responseMsg.decode() == "/bye":
-                        print("\n<{}> encerrou a conexão".format(peerName.decode()))   
-                        break
-                    elif responseMsg.decode() == "":
-                        print("\n<{}> encerrou a conexão".format(peerName.decode()))
-                        break
-
+                    if responseMsg.decode() == "DISC":
+                        print("{} saiu do chat :(".format(peerName.decode()))   
+                        break               
                     print(f"ExpectedPeerName: {expectedPeerName} e ReceivedPeerName:{peerName.decode()}")
                     if(expectedPeerName==""):
                         print("<{}>:".format(peerName.decode()), responseMsg.decode())
@@ -48,7 +47,7 @@ def handlePeerConnection(myServerSocket):
 
             
 def main():
-    print_help()
+    #print_help()
 
     try:
         # Cria o socket que funciona como servidor próprio, serve para conexao com peer
@@ -63,7 +62,7 @@ def main():
         
         tendereco, tporta = myServerSocket.getsockname()
         
-        print(f"Minha porta:{tporta}")
+        #print(f"Minha porta:{tporta}")
 
 
     except OSError as err:
@@ -75,8 +74,9 @@ def main():
         # erro relacionado à porta fora do intervalo válido
 
     finally:
-        print("myServerSocket is listening")
+        #print("myServerSocket is listening")
         myServerSocket.listen(2)
+        print("Tentando conexao com o servidor central....")
 
     try:
     # Cria o socket TCP/IP
@@ -87,11 +87,13 @@ def main():
         global porta
         serverSocket.connect((host, porta))
     
-        print("Conectado ao servidor com sucesso")
-
+        print("Conectado ao servidor com sucesso\n")
+        print_help()
     except socket.error as err:
-        print(f"Erro ao conectar ao servidor: {err}")
+        #print(f"Erro ao conectar ao servidor: {err}")
         # Trate o erro aqui, como fechar o socket se necessário
+         print("Erro ao conectar com servidor\nExecute a aplicação novamente")
+         sys.exit()
     finally:
         ##msg=input("Digite a mensagem inicial\n")
         msg="USER main:"+str(tporta)
@@ -119,10 +121,14 @@ def main():
         
 
       
-        inputMsg=input("(main)Digite o comando \n")
+        inputMsg=input("({})Digite o comando \n".format(myname))
         if(inputMsg=="/help"):
             print_help()
 
+        if(inputMsg=="/info"):
+            print("Meu ip:",tendereco)
+            print("Minha porta:",tporta)
+            
         
         if(inputMsg=="/list"):
             sentBytes=serverSocket.send(("LIST"+"\r\n").encode())
@@ -167,7 +173,7 @@ def main():
                     while True:
                         inputMsg=input(f"Escreva sua mensagem a(o) {expectedPeerName} ou digite /return para voltar ao menu\n")
                         if(inputMsg=="/bye"):
-                            #sentBytes=peerSocket.send(("DISC"+"\r\n").encode())
+                            peerSocket.send(("DISC").encode())
                             expectedPeerName=""
                             peerSocket.close()
                             break
