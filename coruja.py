@@ -5,10 +5,11 @@ import time
 
 
 host = '200.235.131.66' #ip Servidor
-porta = 10001
+porta = 10000
 
 
 expectedPeerName=""
+expectedPeerPort=""
 
 def print_help():
     print("/list para listar peers online")
@@ -18,6 +19,7 @@ def print_help():
     print("\n")
 
 
+
 def handlePeerConnection(myServerSocket):
     try:
             conn, addr = myServerSocket.accept()
@@ -25,6 +27,8 @@ def handlePeerConnection(myServerSocket):
             
             print(f"Conexão estabelecida com peer de porta {addr[1]}")
             peerName = conn.recv(1024) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
+
+            peerPort=addr[1]
             print("\nConexão estabelecida com <{}>\n".format(peerName.decode()))
             while True:
                 try:
@@ -32,23 +36,35 @@ def handlePeerConnection(myServerSocket):
                     if responseMsg.decode() == "DISC":
                         print("{} saiu do chat :(".format(peerName.decode()))   
                         break               
-                    print(f"ExpectedPeerName: {expectedPeerName} e ReceivedPeerName:{peerName.decode()}")
+                    print(f"ExpectedPeerName: {expectedPeerName} and ReceivedPeerName:{peerName.decode()}")
+                    print(f"ExpectedPeerPort: {expectedPeerPort} and ReceivedPeerPort:{peerPort}")
                     if(expectedPeerName==""):
                         print("<{}>:".format(peerName.decode()), responseMsg.decode())
                     elif(expectedPeerName==peerName.decode()):
                         print("<{}>:".format(peerName.decode()), responseMsg.decode())
                     #else nao printa, mas recebe.
                 except:
+                    print("Erro de conexao")
                     break
     except socket.error as e:
         print(f"(handlePeerConnection)Erro de conexao com peer {e}")
     except:
         print("Conexão encerrada")
 
-            
+def keep(serverSocket):
+    # while True:
+    #     try:
+    #         sentBytes=serverSocket.send(str.encode("KEEP\r\n"))
+        
+    #     except:
+    #         print("Falha ao mandar Keep para o servidor")
+        
+    #     time.sleep(10)
+    print()
+
 def main():
     #print_help()
-
+  
     try:
         # Cria o socket que funciona como servidor próprio, serve para conexao com peer
         myServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -112,6 +128,9 @@ def main():
     #if responseMsg:
      #   print("Mensagem Recebida com sucesso")
         #print(responseMsg.decode())
+    keepAlive_Thread = threading.Thread(target=keep, args=(serverSocket,)) 
+    keepAlive_Thread.daemon = True
+    keepAlive_Thread.start() 
 
     while True:
         thread_receber = threading.Thread(target=handlePeerConnection, args=(myServerSocket,)) 
@@ -131,11 +150,17 @@ def main():
             
         
         if(inputMsg=="/list"):
-            sentBytes=serverSocket.send(("LIST"+"\r\n").encode())
-            if(sentBytes==-1):
-                print("Erro ao enviar mensagem")
-            responseMsg = serverSocket.recv(1024)
-            print(responseMsg.decode())
+            try:
+                sentBytes=serverSocket.send(("LIST"+"\r\n").encode())
+            except:            
+                print("Erro ao enviar mensagem, desconectado do servidor")
+            finally:
+                try:
+                    responseMsg = serverSocket.recv(1024)
+                except:
+                    print("Erro de conexao, desconectado pelo servidor")
+                finally:
+                    print(responseMsg.decode())
 
         if(inputMsg=="/exit"):
             sys.exit("Tchau!")
@@ -148,18 +173,24 @@ def main():
             expectedPeerName=inputMsg
             print(f"Voce deseja-se comunicar com {expectedPeerName}")
             
-            sentBytes=serverSocket.send(("ADDR " +inputMsg+"\r\n").encode())
-
-            if(sentBytes==-1):
-                print("Erro ao enviar mensagem")
-            responseMsg = serverSocket.recv(1024)
-            ipv4string=responseMsg.decode().replace("ADDR","").replace(" ","")
-            #print(ipv4string)
-            ip, port = ipv4string.split(':')
-            #expectedPeerPort=port
-            port=int(port)
-            print(ip)
-            print(port)
+            try:
+                sentBytes=serverSocket.send(("ADDR " +inputMsg+"\r\n").encode())
+            except:
+                print("Erro ao enviar mensagem ao servidor\nDesconectado do servidor")
+            
+            try:
+                responseMsg = serverSocket.recv(1024)
+            except:
+                 print("Erro ao receber mensagem do servidor\nDesconectado do servidor")
+            finally:
+                ipv4string=responseMsg.decode().replace("ADDR","").replace(" ","")
+                #print(ipv4string)
+                ip, port = ipv4string.split(':')
+                global expectedPeerPort
+                expectedPeerPort=port
+                port=int(port)
+                print(ip)
+                print(port)
             try:
                     peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
                     #peerSocket.connect((ip, port))
