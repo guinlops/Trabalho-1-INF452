@@ -18,6 +18,20 @@ def print_help():
     print("/info para informacoes de conexão")
     print("\n")
 
+def extrair_nome(mensagem):
+    # Remove o prefixo 'USER ' e o sufixo '\r\n' (se houver) da mensagem inicial
+    if mensagem.startswith("USER "):
+        # Remove o prefixo 'USER '
+        myname = mensagem[5:]
+        
+        # Remove o sufixo '\r\n' se ele existir
+        if myname.endswith("\r\n"):
+            myname = myname[:-2]
+            
+        return myname
+    else:
+        raise ValueError("Formato de mensagem inválido")
+    
 
 
 def handlePeerConnection(myServerSocket):
@@ -25,30 +39,34 @@ def handlePeerConnection(myServerSocket):
             conn, addr = myServerSocket.accept()
             #print(addr.decode())
             print(f"Conexão estabelecida com peer de porta {addr[1]}")
-            peerName = conn.recv(1024) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
-
+            
+            peerName=extrair_nome(conn.recv(1024).decode()) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
+           
+            #peerName=extrair_nome(peerName_obj.decode()) #extrai o peer name da mensagem inicial USER <nome>
             peerPort=addr[1]
-            print("\nConexão estabelecida com <{}>\n".format(peerName.decode()))
+            print("\nConexão estabelecida com <{}>\n".format(peerName))
             while True:
                 try:
                     responseMsg = conn.recv(1024) #As próximas mensagens chegarão aqui
                     if responseMsg.decode() == "DISC":
-                        print("{} saiu do chat :(".format(peerName.decode()))   
+                        print("{} saiu do chat :(".format(peerName))   
                         break               
-                    print(f"ExpectedPeerName: {expectedPeerName} and ReceivedPeerName:{peerName.decode()}")
-                    print(f"ExpectedPeerPort: {expectedPeerPort} and ReceivedPeerPort:{peerPort}")
+                    #print(f"ExpectedPeerName: {expectedPeerName} and ReceivedPeerName:{peerName}")
+                    #print(f"ExpectedPeerPort: {expectedPeerPort} and ReceivedPeerPort:{peerPort}")
                     if(expectedPeerName==""):
-                        print("<{}>:".format(peerName.decode()), responseMsg.decode())
-                    elif(expectedPeerName==peerName.decode()):
-                        print("<{}>:".format(peerName.decode()), responseMsg.decode())
+                        print("<{}>:".format(peerName), responseMsg.decode())
+                    elif(expectedPeerName==peerName):
+                        print("<{}>:".format(peerName), responseMsg.decode())
                     #else nao printa, mas recebe.
                 except:
                     print("Erro de conexao")
                     break
     except socket.error as e:
         print(f"(handlePeerConnection)Erro de conexao com peer {e}")
-    except:
-        print("Conexão encerrada")
+    # except:
+    #     print("Conexão encerrada")
+    except Exception as e:
+        print(f"Erro inesperado: {e}")
 
 def keep(serverSocket):
     while True:
@@ -170,19 +188,27 @@ def main():
             try:
                     peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
                     #peerSocket.connect((ip, port))
-                    peerSocket.connect(('localhost',port))
-                    peerSocket.send((myname).encode())
+                    peerSocket.connect(('localhost',port)) # se conecta a um peer na mesma maquina (mesmo ip)
+                    
+                    peerSocket.send(("USER "+myname).encode()) # send USER <nome>
                     
             except socket.error as err:
                 print(f"Erro ao conectar ao peer: {err}")
                 continue
+            except:
+                print("Erro ao enviar mensagem ao peer")
             finally:
                     while True:
                         inputMsg=input(f"Escreva sua mensagem a(o) {expectedPeerName} ou digite /bye para voltar ao menu\n")
                         if(inputMsg=="/bye"):
-                            peerSocket.send(("DISC").encode())
-                            expectedPeerName=""
-                            peerSocket.close()
+                            try:
+                                peerSocket.send(("DISC").encode())
+                            except:
+                                print("Erro ao encerrar conexao")
+                            finally:
+                                
+                                expectedPeerName=""
+                                peerSocket.close()
                             break
                         
                        
