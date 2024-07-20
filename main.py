@@ -133,9 +133,9 @@ def main():
     keepAlive_Thread.start() 
 
     while True:
-        thread_receber = threading.Thread(target=handlePeerConnection, args=(myServerSocket,)) 
-        thread_receber.daemon = True  # Torna o thread daemon para que ele termine quando o programa principal terminar   
-        thread_receber.start() #Start do recebimento 
+        listening_thread = threading.Thread(target=handlePeerConnection, args=(myServerSocket,)) 
+        listening_thread.daemon = True  # Torna o thread daemon para que ele termine quando o programa principal terminar   
+        listening_thread.start() #Start do recebimento  
 
         
 
@@ -203,17 +203,13 @@ def main():
                 continue
             finally:
                     while True:
-                        inputMsg=input(f"Escreva sua mensagem a(o) {expectedPeerName} ou digite /return para voltar ao menu\n")
+                        inputMsg=input(f"Escreva sua mensagem a(o) {expectedPeerName} ou digite /bye para voltar ao menu\n")
                         if(inputMsg=="/bye"):
                             peerSocket.send(("DISC").encode())
                             expectedPeerName=""
                             peerSocket.close()
                             break
                         
-
-                        if(inputMsg=="/return"):
-                            break
-
                        
                         try:
                             sentBytes=peerSocket.send(inputMsg.encode())
