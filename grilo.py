@@ -4,8 +4,8 @@ import sys
 import time
 
 
-host = '200.235.131.66' #ip Servidor
-porta = 10000
+host_ip = '200.235.131.66' #ip Servidor
+host_port = 10000
 
 
 expectedPeerName=""
@@ -24,7 +24,6 @@ def handlePeerConnection(myServerSocket):
     try:
             conn, addr = myServerSocket.accept()
             #print(addr.decode())
-            
             print(f"Conexão estabelecida com peer de porta {addr[1]}")
             peerName = conn.recv(1024) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
 
@@ -54,7 +53,7 @@ def handlePeerConnection(myServerSocket):
 def keep(serverSocket):
     while True:
         try:
-            sentBytes=serverSocket.send(str.encode("KEEP\r\n"))
+           serverSocket.send(str.encode("KEEP\r\n"))
         
         except:
             print("Falha ao mandar Keep para o servidor")
@@ -68,29 +67,14 @@ def main():
     try:
         # Cria o socket que funciona como servidor próprio, serve para conexao com peer
         myServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        # Especifica o endereço e a porta desejados
-        endereco = 'localhost'
-        #porta = 20000
-        # Tenta vincular o socket ao endereço e porta especificados
-        
-        myServerSocket.bind((endereco, 0)) #teste ip e porta atribuido automaticamente
-        
-        tendereco, tporta = myServerSocket.getsockname()
-        
-        #print(f"Minha porta:{tporta}")
-
-
+        my_ip = 'localhost' #para teste local
+        myServerSocket.bind((my_ip, 0)) #teste ip e porta atribuido automaticamente     
+        tendereco, tporta = myServerSocket.getsockname()  
     except OSError as err:
         print(f"Erro ao vincular o socket: {err}")
-        # Trate o erro de bind específico aqui
-
     except ValueError as ve:
         print(f"Erro de valor: {ve}")
-        # erro relacionado à porta fora do intervalo válido
-
     finally:
-        #print("myServerSocket is listening")
         myServerSocket.listen(2)
         print("Tentando conexao com o servidor central....")
 
@@ -101,17 +85,14 @@ def main():
     # Conecta ao servidor/ conecta ao socket do Servidor  
         global host
         global porta
-        serverSocket.connect((host, porta))
+        serverSocket.connect((host_ip, host_port))
     
         print("Conectado ao servidor com sucesso\n")
         print_help()
     except socket.error as err:
-        #print(f"Erro ao conectar ao servidor: {err}")
-        # Trate o erro aqui, como fechar o socket se necessário
          print("Erro ao conectar com servidor\nExecute a aplicação novamente")
          sys.exit()
     finally:
-        ##msg=input("Digite a mensagem inicial\n")
         msg="USER grilo:"+str(tporta)
         myname="grilo"
         msg=msg+"\r\n"
@@ -122,12 +103,6 @@ def main():
     if(sentBytes==-1):
         print("Erro ao enviar mensagem")
 
-    #serverSocket.send(str.encode("LIST\r\n"))
-    #responseMsg = serverSocket.recv(1024)
-
-    #if responseMsg:
-     #   print("Mensagem Recebida com sucesso")
-        #print(responseMsg.decode())
     keepAlive_Thread = threading.Thread(target=keep, args=(serverSocket,)) 
     keepAlive_Thread.daemon = True
     keepAlive_Thread.start() 
