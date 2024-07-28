@@ -3,10 +3,8 @@ import threading
 import sys 
 import time
 
-
 host_ip = '200.235.131.66' #ip Servidor
 host_port = 10000
-
 
 expectedPeerName=""
 expectedPeerPort=""
@@ -32,18 +30,12 @@ def extract_name(initial_msg):
     else:
         raise ValueError("Formato de mensagem inválido")
     
-
-
 def handlePeerConnection(myServerSocket):
     try:
             conn, addr = myServerSocket.accept()
-            #print(addr.decode())
             print(f"Conexão estabelecida com peer de porta {addr[1]}")
             
             peerName=extract_name(conn.recv(1024).decode()) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
-           
-            #peerName=extrair_nome(peerName_obj.decode()) #extrai o peer name da mensagem inicial USER <nome>
-            peerPort=addr[1]
             print("\nConexão estabelecida com <{}>\n".format(peerName))
             while True:
                 try:
@@ -51,20 +43,15 @@ def handlePeerConnection(myServerSocket):
                     if responseMsg.decode() == "DISC":
                         print("{} saiu do chat :(".format(peerName))   
                         break               
-                    #print(f"ExpectedPeerName: {expectedPeerName} and ReceivedPeerName:{peerName}")
-                    #print(f"ExpectedPeerPort: {expectedPeerPort} and ReceivedPeerPort:{peerPort}")
                     if(expectedPeerName==""):
                         print("<{}>:".format(peerName), responseMsg.decode())
                     elif(expectedPeerName==peerName):
                         print("<{}>:".format(peerName), responseMsg.decode())
-                    #else nao printa, mas recebe.
                 except:
                     print("Erro de conexao")
                     break
     except socket.error as e:
         print(f"(handlePeerConnection)Erro de conexao com peer {e}")
-    # except:
-    #     print("Conexão encerrada")
     except Exception as e:
         print(f"Erro inesperado: {e}")
 
@@ -79,16 +66,14 @@ def keep(serverSocket):
         time.sleep(5)
     
 
-def main():
-    #print_help()
-  
+def main():  
     try:
-        # Cria o socket que funciona como servidor próprio, serve para conexao com peer
+        # Cria o socket que funciona como servidor próprio para conexao com peer
         myServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         my_ip = 'localhost' #para teste local
-        myServerSocket.bind((my_ip, 0)) #teste ip e porta atribuido automaticamente   
-        #myServerSocket.bind(('', 0)) #Descomentar para teste com conexão externa    
-        tendereco, tporta = myServerSocket.getsockname()  
+        myServerSocket.bind((my_ip, 0)) #para teste local  
+        #myServerSocket.bind(('', 0)) #Descomentar para teste com conexão externa     
+        myAddr, myPort = myServerSocket.getsockname()  
     except OSError as err:
         print(f"Erro ao vincular o socket: {err}")
     except ValueError as ve:
@@ -100,7 +85,6 @@ def main():
     try:
     # Cria o socket TCP/IP
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
     # Conecta ao servidor/ conecta ao socket do Servidor  
         global host
         global porta
@@ -112,12 +96,10 @@ def main():
          print("Erro ao conectar com servidor\nExecute a aplicação novamente")
          sys.exit()
     finally:
-        msg="USER grilo:"+str(tporta)
+        msg="USER grilo:"+str(myPort)
         myname="grilo"
         msg=msg+"\r\n"
-        
-        
-        
+                
     sentBytes=serverSocket.send(msg.encode())
     if(sentBytes==-1):
         print("Erro ao enviar mensagem")
@@ -131,16 +113,14 @@ def main():
         listening_thread.daemon = True  # Torna o thread daemon para que ele termine quando o programa principal terminar   
         listening_thread.start() #Start do recebimento  
 
-        
 
-      
         inputMsg=input("({})Digite o comando \n".format(myname))
         if(inputMsg=="/help"):
             print_help()
 
         if(inputMsg=="/info"):
-            print("Meu ip:",tendereco)
-            print("Minha porta:",tporta)
+            print("Meu ip:",myAddr)
+            print("Minha porta:",myPort)
             
         
         if(inputMsg=="/list"):
@@ -155,9 +135,8 @@ def main():
                     print("Erro de conexao, desconectado pelo servidor")
                 finally:
                     print(responseMsg.decode())
-
+        
         if(inputMsg=="/exit"):
-            
             sys.exit("Tchau!")
         
         if(inputMsg=="/chat"):
@@ -167,19 +146,16 @@ def main():
             global expectedPeerName
             expectedPeerName=inputMsg
             print(f"Voce deseja-se comunicar com {expectedPeerName}")
-            
             try:
                 sentBytes=serverSocket.send(("ADDR " +inputMsg+"\r\n").encode())
             except:
                 print("Erro ao enviar mensagem ao servidor\nDesconectado do servidor")
-            
             try:
                 responseMsg = serverSocket.recv(1024)
             except:
                  print("Erro ao receber mensagem do servidor\nDesconectado do servidor")
             finally:
                 ipv4string=responseMsg.decode().replace("ADDR","").replace(" ","")
-                #print(ipv4string)
                 ip, port = ipv4string.split(':')
                 global expectedPeerPort
                 expectedPeerPort=port
@@ -207,26 +183,17 @@ def main():
                             except:
                                 print("Erro ao encerrar conexao")
                             finally:
-                                
                                 expectedPeerName=""
                                 peerSocket.close()
                             break
-                        
-                       
                         try:
                             sentBytes=peerSocket.send(inputMsg.encode())
                             if(sentBytes==-1):
                                 print("Erro ao enviar mensagem")
-
                         except socket.error as e:
                             print(f"Erro de conexao com peer\n{e}")
                             peerSocket.close()
                             break
-                        
-                        #finally:
-                         #   continue
-       
-
 if __name__ == "__main__":
     main()
     #sys.exit(0)
