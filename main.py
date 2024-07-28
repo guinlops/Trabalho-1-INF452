@@ -18,11 +18,11 @@ def print_help():
     print("/info para informacoes de conexão")
     print("\n")
 
-def extrair_nome(mensagem):
+def extract_name(initial_msg):
     # Remove o prefixo 'USER ' e o sufixo '\r\n' (se houver) da mensagem inicial
-    if mensagem.startswith("USER "):
+    if initial_msg.startswith("USER "):
         # Remove o prefixo 'USER '
-        myname = mensagem[5:]
+        myname = initial_msg[5:]
         
         # Remove o sufixo '\r\n' se ele existir
         if myname.endswith("\r\n"):
@@ -37,13 +37,9 @@ def extrair_nome(mensagem):
 def handlePeerConnection(myServerSocket):
     try:
             conn, addr = myServerSocket.accept()
-            #print(addr.decode())
             print(f"Conexão estabelecida com peer de porta {addr[1]}")
             
-            peerName=extrair_nome(conn.recv(1024).decode()) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
-           
-            #peerName=extrair_nome(peerName_obj.decode()) #extrai o peer name da mensagem inicial USER <nome>
-            peerPort=addr[1]
+            peerName=extract_name(conn.recv(1024).decode()) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
             print("\nConexão estabelecida com <{}>\n".format(peerName))
             while True:
                 try:
@@ -57,14 +53,11 @@ def handlePeerConnection(myServerSocket):
                         print("<{}>:".format(peerName), responseMsg.decode())
                     elif(expectedPeerName==peerName):
                         print("<{}>:".format(peerName), responseMsg.decode())
-                    #else nao printa, mas recebe.
                 except:
                     print("Erro de conexao")
                     break
     except socket.error as e:
         print(f"(handlePeerConnection)Erro de conexao com peer {e}")
-    # except:
-    #     print("Conexão encerrada")
     except Exception as e:
         print(f"Erro inesperado: {e}")
 
@@ -76,7 +69,7 @@ def keep(serverSocket):
         except:
             print("Falha ao mandar Keep para o servidor")
         
-        time.sleep(10)
+        time.sleep(5)
     
 
 def main():
@@ -86,7 +79,9 @@ def main():
         # Cria o socket que funciona como servidor próprio, serve para conexao com peer
         myServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         my_ip = 'localhost' #para teste local
-        myServerSocket.bind((my_ip, 0)) #teste ip e porta atribuido automaticamente     
+        myServerSocket.bind((my_ip, 0)) #para teste local  
+        #myServerSocket.bind(('', 0)) #Descomentar para teste com conexão externa     
+
         tendereco, tporta = myServerSocket.getsockname()  
     except OSError as err:
         print(f"Erro ao vincular o socket: {err}")
@@ -187,7 +182,7 @@ def main():
                 print(port)
             try:
                     peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-                    #peerSocket.connect((ip, port))
+                    #peerSocket.connect((ip, port)) # Descomentar para teste com conexão externa    
                     peerSocket.connect(('localhost',port)) # se conecta a um peer na mesma maquina (mesmo ip)
                     
                     peerSocket.send(("USER "+myname).encode()) # send USER <nome>

@@ -76,7 +76,7 @@ def keep(serverSocket):
         except:
             print("Falha ao mandar Keep para o servidor")
         
-        time.sleep(10)
+        time.sleep(5)
     
 
 def main():
@@ -86,7 +86,8 @@ def main():
         # Cria o socket que funciona como servidor próprio, serve para conexao com peer
         myServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         my_ip = 'localhost' #para teste local
-        myServerSocket.bind((my_ip, 0)) #teste ip e porta atribuido automaticamente     
+        myServerSocket.bind((my_ip, 0)) #teste ip e porta atribuido automaticamente   
+        #myServerSocket.bind(('', 0)) #Descomentar para teste com conexão externa    
         tendereco, tporta = myServerSocket.getsockname()  
     except OSError as err:
         print(f"Erro ao vincular o socket: {err}")
@@ -187,7 +188,7 @@ def main():
                 print(port)
             try:
                     peerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-                    #peerSocket.connect((ip, port))
+                    #peerSocket.connect((ip, port)) # Descomentar para teste com conexão externa    
                     peerSocket.connect(('localhost',port)) # se conecta a um peer na mesma maquina (mesmo ip)
                     
                     peerSocket.send(("USER "+myname).encode()) # send USER <nome>
