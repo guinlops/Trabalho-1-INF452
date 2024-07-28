@@ -62,14 +62,19 @@ def handlePeerConnection(myServerSocket):
 
 
 def keep(serverSocket):
+    count =0
     while True:
+        if(count==4):
+            serverSocket.shutdown(socket.SHUT_RDWR)
         try:
            serverSocket.send(str.encode("KEEP\r\n"))
         except:
             print("Falha ao mandar Keep para o servidor")
+            count+=1
+        else:
+            count=0
         finally:
-            time.sleep(5)    
-
+            time.sleep(5)   
 
 def handleChat(serverSocket,myName,myAddr,myPort):
     while True:
