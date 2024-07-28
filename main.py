@@ -14,6 +14,7 @@ def print_help():
     print("/chat para comunicar com outro peer")
     print("/help para lista de comandos")
     print("/info para informacoes de conexão")
+    print("Aperte enter para realizar uma açao apos receber mensagem")
     print("\n")
 
 def extract_name(initial_msg):
@@ -41,7 +42,7 @@ def handlePeerConnection(myServerSocket):
                 try:
                     responseMsg = conn.recv(1024) #As próximas mensagens chegarão aqui
                     if responseMsg.decode() == "DISC":
-                        print("{} saiu do chat :(".format(peerName))   
+                        print("{} saiu do chat :(".format(peerName))  
                         break               
                     if(expectedPeerName==""):
                         print("<{}>:".format(peerName), responseMsg.decode())
@@ -51,7 +52,7 @@ def handlePeerConnection(myServerSocket):
                     print("Erro de conexao")
                     break
     except socket.error as e:
-        print(f"(handlePeerConnection)Erro de conexao com peer {e}")
+        print(f"Erro de conexao com peer")
     except Exception as e:
         print(f"Erro inesperado: {e}")
 
@@ -191,7 +192,7 @@ def main():
                             if(sentBytes==-1):
                                 print("Erro ao enviar mensagem")
                         except socket.error as e:
-                            print(f"Erro de conexao com peer\n{e}")
+                            print(f"Erro de conexao com peer")
                             peerSocket.close()
                             break
 if __name__ == "__main__":
