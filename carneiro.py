@@ -1,14 +1,14 @@
 #NOME: Guilherme Nunes Lopes 105462
 #Nome: Cicero Cipriano Maciel 102021
 
-
 import socket 
 import threading 
 import sys 
 import time
 import select
-socket.setdefaulttimeout(1.0)
-host_ip = '200.235.131.66' #ip Servidor
+
+#socket.setdefaulttimeout(1.0)
+host_ip = '200.235.131.66'
 host_port = 10000
 
 expectedPeerName=""
@@ -22,77 +22,40 @@ def print_help():
     print("Aperte enter para realizar uma açao apos receber mensagem")
     print("\n")
 
-def extract_name(initial_msg):
-    # Remove o prefixo 'USER ' e o sufixo '\r\n' (se houver) da mensagem inicial
+def extract_name(msg):
     if initial_msg.startswith("USER "):
-        # Remove o prefixo 'USER '
         myname = initial_msg[5:]
-        
-        # Remove o sufixo '\r\n' se ele existir
         if myname.endswith("\r\n"):
             myname = myname[:-2]
-            
         return myname
     else:
-        raise ValueError("Formato de mensagem inválido")
-    
-# def handlePeerConnection(myServerSocket):
-#     try:
-#             conn, addr = myServerSocket.accept()
-#             print(f"Conexão estabelecida com peer de porta {addr[1]}")
-            
-#             peerName=extract_name(conn.recv(1024).decode()) #Primeira mensagem que recebe é o nome do usuário que fará a conexão
-#             print("\nConexão estabelecida com <{}>\n".format(peerName))
-#             while True:
-#                 print("to executando")
-#                 try:
-#                     responseMsg = conn.recv(1024) #As próximas mensagens chegarão aqui
-#                     if responseMsg.decode() == "DISC":
-#                         print("{} saiu do chat :(".format(peerName))  
-#                         break               
-#                     if(expectedPeerName==""):
-#                         print("<{}>:".format(peerName), responseMsg.decode())
-#                     elif(expectedPeerName==peerName):
-#                         print("<{}>:".format(peerName), responseMsg.decode())
-#                 except:
-#                     print("Erro de conexao")
-#                     break
-#     except socket.error as e:
-#         print(f"Erro de conexao com peer")
-#     except Exception as e:
-#         print(f"Erro inesperado: {e}")
-
-
-
+        return ""
 
 def handlePeerConnection(myServerSocket):
-    sockets_to_monitor=[myServerSocket]
+    sockets_to_monitor = [myServerSocket]
+    names = {}
     while True:
-    # Usando select para verificar a disponibilidade de dados para leitura
-        readable, writable, exceptional = select.select(sockets_to_monitor, [], [], 5)
-    
+        readable, writable, exceptional = select.select(sockets_to_monitor, [], [])
         for s in readable:
             if s is myServerSocket:
-                # Aceita nova conexão
-                conn, addr = myServerSocket.accept()
+                conn, addr = s.accept()
                 print(f"Conexão estabelecida com {addr}")
-                sockets_to_monitor.append(conn)  # Adiciona o novo socket à lista de monitoramento
+                sockets_to_monitor.append(conn)
+                names[conn] = None
             else:
-                # Recebe dados do socket existente
                 data = s.recv(1024)
-                if(data):
-                    responseMsg=data.decode()
-                    if (responseMsg=="DISC"):
-                        print("Conexão fechada pelo peer")
+                if data:
+                    msg = data.decode()
+                    name = extract_name(msg)
+                    if len(name) > 0:
+                        names[s] = name
+                        print("\nConexão estabelecida com " + name + "\n")
+                    elif msg == "DISC":
+                        print("Conexão fechada pelo peer " + names[s] + "\n")
                         s.close()
-                        sockets_to_monitor.remove(s)  # Remove o socket da lista de monitoramento 
-                        
-
-
-
-
-
-
+                        sockets_to_monitor.remove(s)
+                    else:
+                        print(names[s] + ": " + msg)
 
 #def handlePeerConnection(myServerSocket):
     
@@ -135,16 +98,6 @@ def handlePeerConnection(myServerSocket):
         #             # print(p[1]+ "nao enviou msg")
 
             #print("Print Saiu do For")
-                                    
-
-
-                    
-            
-
-
-        
-    
-
 
 def keep(serverSocket):
     while True:
@@ -153,10 +106,11 @@ def keep(serverSocket):
         except:
             print("Falha ao mandar Keep para o servidor")
         finally:
-            time.sleep(5)
-    
+            time.sleep(5)    
 
-def main():  
+def main():
+    nome = input("Digite seu nome:")
+    
     try:
         # Cria o socket que funciona como servidor próprio para conexao com peer
         myServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -171,14 +125,11 @@ def main():
     else:
         myServerSocket.listen(2)
         
-
     try:
     # Cria o socket TCP/IP
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Tentando conexao com o servidor central....")
     # Conecta ao servidor/ conecta ao socket do Servidor  
-        
-    
         print("Conectado ao servidor com sucesso\n")
         print_help()
     except socket.error as err:
@@ -186,6 +137,7 @@ def main():
          sys.exit()
     else:
         serverSocket.connect((host_ip, host_port))
+        msg = "USER " + nome + ":" + str(myPort) + "\r\n"
         msg="USER carneiro:"+str(myPort)
         myname="carneiro"
         msg=msg+"\r\n"
