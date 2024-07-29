@@ -151,15 +151,11 @@ def main():
     keepAlive_Thread.daemon = True
     keepAlive_Thread.start() 
 
-
     listening_thread = threading.Thread(target=handlePeerConnection, args=(myServerSocket,)) 
-    listening_thread.daemon = True  # Torna o thread daemon para que ele termine quando o programa principal terminar   
-    listening_thread.start() #Start do recebimento  
+    listening_thread.daemon = True
+    listening_thread.start()
 
     while True:
-    
-
-
         inputMsg=input("({})Digite o comando \n".format(myname))
         if(inputMsg=="/help"):
             print_help()
